@@ -1,38 +1,25 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { pipeline, env } from '@xenova/transformers';
 
 // --- Configuration ---
+env.allowLocalModels = false;
+env.useBrowserCache = true;
+
 const CONFIG = {
     pointRadius: 0.3,
     pointColor: 0x0066cc, // Darker blue for visibility on white
     selectedColor: 0xff0055, // Vivid red/pink
     lineColor: 0x333333, // Dark grey lines
     lineOpacity: 0.4,
-    embeddingScale: 15, // Scale for the embedding coordinates
+    embeddingScale: 2, // t-SNE output needs less scaling than our pseudo-random one
     arrowColor: 0xff8800, // Orange arrows
     arrowLength: 1.5,
 };
 
-// --- Pseudo-Embedding Helper ---
-// Simulates mapping a text string to a vector in 3D space.
-// In a real application, this would be replaced by an API call or precomputed embeddings (e.g., BERT/GPT -> PCA/t-SNE -> 3D).
-function getPseudoEmbedding(text) {
-    let hash = 0;
-    for (let i = 0; i < text.length; i++) {
-        hash = ((hash << 5) - hash) + text.charCodeAt(i);
-        hash |= 0; // Convert to 32bit integer
-    }
-    // Use the hash to seed a pseudo-random number generator for 3 dimensions
-    // We use a simple sin/cos based generic mapping to distribute points in a sphere-like volume
-    const seed = Math.abs(hash);
-    const x = (Math.sin(seed * 0.123) * CONFIG.embeddingScale);
-    const y = (Math.cos(seed * 0.456) * CONFIG.embeddingScale);
-    const z = (Math.sin(seed * 0.789) * CONFIG.embeddingScale);
-    
-    return new THREE.Vector3(x, y, z);
-}
+// --- Helper Functions ---
 
-// --- Data Loading Helper ---
+// Data Loading Helper
 function readTextFile(file, callback) {
     var rawFile = new XMLHttpRequest();
     rawFile.overrideMimeType("application/json");
@@ -44,6 +31,90 @@ function readTextFile(file, callback) {
     }
     rawFile.send(null);
 }
+
+// UI Helper for Loading
+function updateLoadingStatus(message) {
+    const tooltip = document.getElementById('tooltip');
+    if (message) {
+        tooltip.innerHTML = message;
+        tooltip.classList.remove('hidden');
+        tooltip.style.left = '50%';
+        tooltip.style.top = '50%';
+        tooltip.style.transform = 'translate(-50%, -50%)';
+        tooltip.style.zIndex = '1000';
+    } else {
+        tooltip.classList.add('hidden');
+        tooltip.style.transform = 'translate(-50%, -100%)'; // Reset to default tooltip behavior
+        tooltip.style.left = '0';
+        tooltip.style.top = '0';
+        tooltip.style.zIndex = '10';
+    }
+}
+
+// Embedding Generation
+let featureExtractor = null;
+
+async function generateEmbeddings(texts) {
+    try {
+        if (!featureExtractor) {
+            updateLoadingStatus("Loading embedding model (Xenova/all-MiniLM-L6-v2)...<br>This happens in your browser and may take a moment.");
+            featureExtractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+        }
+
+        updateLoadingStatus("Generating embeddings...");
+        const embeddings = [];
+        
+        for (let i = 0; i < texts.length; i++) {
+            // Update progress occasionally
+            updateLoadingStatus(`Generating embeddings: ${i + 1}/${texts.length}`);
+            
+            // Generate embedding
+            const output = await featureExtractor(texts[i], { pooling: 'mean', normalize: true });
+            embeddings.push(Array.from(output.data));
+        }
+        
+        return embeddings;
+    } catch (e) {
+        console.error("Embedding generation failed:", e);
+        alert("Failed to load model or generate embeddings. See console.");
+        return [];
+    }
+}
+
+// t-SNE Projection
+async function runTSNE(embeddings) {
+    updateLoadingStatus("Running t-SNE projection...");
+    
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            try {
+                // Initialize t-SNE
+                const opt = {
+                    epsilon: 10, 
+                    perplexity: Math.max(5, Math.min(30, embeddings.length - 1)), 
+                    dim: 3 
+                };
+                
+                // tsnejs usually exposes 'tsne' object with 'tSNE' constructor
+                const T = new window.tsne.tSNE(opt); 
+                T.initDataRaw(embeddings);
+                
+                // Run optimization
+                const iterations = 500;
+                for (let k = 0; k < iterations; k++) {
+                    T.step();
+                }
+                
+                resolve(T.getSolution()); // Returns array of [x, y, z]
+            } catch (e) {
+                console.error("t-SNE failed:", e);
+                // Fallback to random if t-SNE fails
+                resolve(embeddings.map(() => [Math.random(), Math.random(), Math.random()]));
+            }
+        }, 100); // Small delay to let UI render the message
+    });
+}
+
 
 // --- Scene Setup ---
 const scene = new THREE.Scene();
@@ -71,18 +142,23 @@ pointLight.position.set(10, 10, 10);
 scene.add(pointLight);
 
 // --- Visualization State ---
-const interactableObjects = []; // Stores meshes for raycasting
+const interactableObjects = []; 
 let selectedObject = null;
 let hoveredObject = null;
 
 // --- Build Visualization ---
-function buildScene(data) {
+function buildScene(trajectoryData) {
+    // trajectoryData is array of { id, problem, method, conclusion, position: THREE.Vector3 }
+    
+    // Clear previous scene elements if any (not strictly necessary for single run but good practice)
+    // ...
+
     const nodeGeometry = new THREE.SphereGeometry(CONFIG.pointRadius, 32, 32);
     const nodeMaterial = new THREE.MeshStandardMaterial({ 
         color: CONFIG.pointColor,
         roughness: 0.3,
         metalness: 0.5,
-        emissive: 0x000000 // Reduced emissive for light background
+        emissive: 0x000000 
     });
     
     const lineMaterial = new THREE.LineBasicMaterial({ 
@@ -91,108 +167,122 @@ function buildScene(data) {
         opacity: CONFIG.lineOpacity 
     });
 
-    data.forEach((trajectory, tIndex) => {
-        const points = [];
+    // We assume single trajectory for now based on previous implementation
+    const points = [];
+    const group = new THREE.Group();
+    scene.add(group);
+
+    trajectoryData.forEach((step) => {
+        const { x, y, z } = step.position;
+
+        const mesh = new THREE.Mesh(nodeGeometry, nodeMaterial.clone());
+        mesh.position.set(x, y, z);
+        mesh.userData = { ...step, originalColor: CONFIG.pointColor }; 
         
-        // Group for this trajectory
-        const group = new THREE.Group();
-        scene.add(group);
+        group.add(mesh);
+        interactableObjects.push(mesh);
+        points.push(new THREE.Vector3(x, y, z));
+    });
 
-        // Draw nodes
-        trajectory.forEach((step, sIndex) => {
-            // Use the embedding position stored in the data
-            const { x, y, z } = step.position;
+    // Draw lines and arrows
+    if (points.length > 1) {
+        const curve = new THREE.CatmullRomCurve3(points);
+        const pointsCount = points.length * 10;
+        const curvePoints = curve.getPoints(pointsCount);
+        const curveGeometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
+        const curveLine = new THREE.Line(curveGeometry, lineMaterial);
+        group.add(curveLine);
 
-            const mesh = new THREE.Mesh(nodeGeometry, nodeMaterial.clone());
-            mesh.position.set(x, y, z);
-            mesh.userData = { ...step, originalColor: CONFIG.pointColor }; // Store data in mesh
+        for (let i = 0; i < points.length - 1; i++) {
+            const startPoint = points[i];
+            const endPoint = points[i + 1];
             
-            group.add(mesh);
-            interactableObjects.push(mesh);
-            points.push(new THREE.Vector3(x, y, z));
-        });
+            const direction = new THREE.Vector3().subVectors(endPoint, startPoint).normalize();
+            
+            const arrowOrigin = startPoint.clone().add(direction.clone().multiplyScalar(CONFIG.pointRadius * 1.2));
+            const distance = startPoint.distanceTo(endPoint);
+            const maxLen = distance - (CONFIG.pointRadius * 2.5);
+            const length = Math.min(CONFIG.arrowLength * 1.5, Math.max(0.5, maxLen)); 
+            
+            if (length > 0.1) {
+                const headLength = length * 0.4;
+                const headWidth = headLength * 0.6;
 
-        // Draw lines and arrows connecting nodes
-        if (points.length > 1) {
-            // Curve
-            const curve = new THREE.CatmullRomCurve3(points);
-            const pointsCount = points.length * 10;
-            const curvePoints = curve.getPoints(pointsCount);
-            const curveGeometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
-            const curveLine = new THREE.Line(curveGeometry, lineMaterial);
-            group.add(curveLine);
-
-            // Arrows at each node (except the last one) pointing to the next node
-            for (let i = 0; i < points.length - 1; i++) {
-                const startPoint = points[i];
-                const endPoint = points[i + 1];
-                
-                const direction = new THREE.Vector3().subVectors(endPoint, startPoint).normalize();
-                
-                // Offset arrow slightly from the node so it's visible
-                // Start outside the sphere (radius is CONFIG.pointRadius)
-                const arrowOrigin = startPoint.clone().add(direction.clone().multiplyScalar(CONFIG.pointRadius * 1.2));
-                
-                // Adjust length based on distance, but keep it reasonable
-                const distance = startPoint.distanceTo(endPoint);
-                // Make arrow bigger and ensure it fits in the segment
-                const maxLen = distance - (CONFIG.pointRadius * 2.5); // Ensure it doesn't hit the next node
-                const length = Math.min(CONFIG.arrowLength * 1.5, Math.max(0.5, maxLen)); 
-                
-                if (length > 0.1) {
-                    const headLength = length * 0.4;
-                    const headWidth = headLength * 0.6;
-
-                    const arrowHelper = new THREE.ArrowHelper(
-                        direction, 
-                        arrowOrigin, 
-                        length, 
-                        CONFIG.arrowColor, 
-                        headLength, 
-                        headWidth
-                    );
-                    group.add(arrowHelper);
-                }
+                const arrowHelper = new THREE.ArrowHelper(
+                    direction, 
+                    arrowOrigin, 
+                    length, 
+                    CONFIG.arrowColor, 
+                    headLength, 
+                    headWidth
+                );
+                group.add(arrowHelper);
             }
+        }
+    }
+    
+    // Center camera on the centroid
+    if (points.length > 0) {
+        const center = new THREE.Vector3();
+        points.forEach(p => center.add(p));
+        center.divideScalar(points.length);
+        controls.target.copy(center);
+        camera.lookAt(center);
+    }
+}
+
+// --- Main execution ---
+async function init() {
+    readTextFile("/api/data", async function(text) {
+        try {
+            const rawData = JSON.parse(text);
+            
+            // Prepare texts for embedding
+            // Concatenate relevant fields to get a meaningful representation
+            const texts = rawData.map(step => `${step.p}\n${step.s}\n${step.c}`);
+            
+            // 1. Generate Embeddings
+            const embeddings = await generateEmbeddings(texts);
+            
+            // 2. Project with t-SNE
+            const projectedPoints = await runTSNE(embeddings);
+            
+            updateLoadingStatus(""); // Clear loading message
+
+            // 3. Process data for scene
+            const trajectoryData = rawData.map((step, index) => {
+                const coords = projectedPoints[index];
+                return {
+                    id: `step-${index}`,
+                    problem: step.p,
+                    method: step.s,
+                    conclusion: step.c,
+                    position: new THREE.Vector3(
+                        coords[0] * CONFIG.embeddingScale, 
+                        coords[1] * CONFIG.embeddingScale, 
+                        coords[2] * CONFIG.embeddingScale
+                    )
+                };
+            });
+
+            buildScene(trajectoryData);
+
+        } catch (e) {
+            console.error("Error processing data:", e);
+            alert("Error processing data.");
         }
     });
 }
 
-// --- Load Data and Build Scene ---
-readTextFile("../agents/traj.json", function(text) {
-    const rawTrajectoryData = JSON.parse(text);
-    
-    // Treat the linear list of steps as a single trajectory for visualization
-    const trajectory = rawTrajectoryData.map((step, index) => {
-        const problem = step.p;
-        const method = step.s;
-        const conclusion = step.c;
-        
-        // Generate embedding coordinate based on the content
-        const content = `${problem} ${method} ${conclusion}`;
-        const position = getPseudoEmbedding(content);
+init();
 
-        return {
-            id: `step-${index}`,
-            problem: problem,
-            method: method,
-            conclusion: conclusion,
-            position: position
-        };
-    });
-
-    const trajectories = [trajectory];
-    buildScene(trajectories);
-});
-
-// --- Interaction ---
+// --- Interaction (Same as before) ---
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const infoPanel = document.getElementById('info-panel');
 const tooltip = document.getElementById('tooltip');
 const closeBtn = document.getElementById('close-panel');
 
-// UI Elements
 const uiProblem = document.getElementById('point-problem');
 const uiMethod = document.getElementById('point-method');
 const uiConclusion = document.getElementById('point-conclusion');
@@ -218,30 +308,21 @@ closeBtn.addEventListener('click', () => {
 });
 
 function onMouseClick(event) {
-    // Calculate mouse position in normalized device coordinates
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-
     const intersects = raycaster.intersectObjects(interactableObjects);
 
     if (intersects.length > 0) {
         const object = intersects[0].object;
-        
         if (selectedObject !== object) {
             resetSelection();
-            
             selectedObject = object;
             selectedObject.material.color.setHex(CONFIG.selectedColor);
             selectedObject.scale.set(1.5, 1.5, 1.5);
-            
             updateInfoPanel(object.userData);
         }
-    } else {
-        // Optional: Deselect if clicking empty space
-        // resetSelection();
-        // infoPanel.classList.add('hidden');
     }
 }
 
@@ -249,55 +330,41 @@ window.addEventListener('click', onMouseClick);
 window.addEventListener('mousemove', onMouseMove);
 
 function onMouseMove(event) {
-    // Calculate mouse position in normalized device coordinates
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    // Only update hover if not showing global loading message
+    if (!tooltip.innerHTML.includes("Loading") && !tooltip.innerHTML.includes("Generating")) {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    raycaster.setFromCamera(mouse, camera);
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(interactableObjects);
 
-    const intersects = raycaster.intersectObjects(interactableObjects);
-
-    if (intersects.length > 0) {
-        const object = intersects[0].object;
-        
-        if (hoveredObject !== object) {
-            hoveredObject = object;
-            
-            // Show tooltip
-            tooltip.classList.remove('hidden');
-            // Truncate tooltip content if too long
-            const problemShort = object.userData.problem.length > 50 ? object.userData.problem.substring(0, 50) + "..." : object.userData.problem;
-            tooltip.innerHTML = `<strong>${problemShort}</strong>`;
-            
-            // Optional: slight highlight if not selected
-            if (object !== selectedObject) {
-                 // We could change color here, but let's keep it simple for now or maybe scale slightly
-                 // object.scale.set(1.2, 1.2, 1.2); 
+        if (intersects.length > 0) {
+            const object = intersects[0].object;
+            if (hoveredObject !== object) {
+                hoveredObject = object;
+                tooltip.classList.remove('hidden');
+                // Use substring for preview
+                const problemShort = object.userData.problem.length > 50 ? object.userData.problem.substring(0, 50) + "..." : object.userData.problem;
+                tooltip.innerHTML = `<strong>${problemShort}</strong>`;
             }
-        }
-
-        // Update tooltip position
-        tooltip.style.left = event.clientX + 'px';
-        tooltip.style.top = event.clientY + 'px';
-
-    } else {
-        if (hoveredObject) {
-            // Reset hover state
-            // if (hoveredObject !== selectedObject) hoveredObject.scale.set(1, 1, 1);
-            hoveredObject = null;
-            tooltip.classList.add('hidden');
+            tooltip.style.left = event.clientX + 'px';
+            tooltip.style.top = event.clientY + 'px';
+            tooltip.style.transform = 'translate(-50%, -100%)';
+        } else {
+            if (hoveredObject) {
+                hoveredObject = null;
+                tooltip.classList.add('hidden');
+            }
         }
     }
 }
 
-// Handle Window Resize
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// --- Animation Loop ---
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
