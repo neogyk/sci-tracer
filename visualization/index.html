@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SciTracer - Trajectory Visualization</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="container"></div>
+    <div id="ui-layer">
+        <div id="info-panel" class="panel hidden">
+            <h2 id="point-title">Point Details</h2>
+            <div class="field">
+                <h3>Problem Definition</h3>
+                <p id="point-problem">Select a point...</p>
+            </div>
+            <div class="field">
+                <h3>Methodology/Instruction</h3>
+                <p id="point-method">...</p>
+            </div>
+            <div class="field">
+                <h3>Conclusion</h3>
+                <p id="point-conclusion">...</p>
+            </div>
+            <button id="close-panel">Close</button>
+        </div>
+        <div id="controls-panel" class="panel">
+            <h3>Controls</h3>
+            <p>Left Click: Rotate</p>
+            <p>Right Click: Pan</p>
+            <p>Scroll: Zoom</p>
+            <p>Click Node: View Details</p>
+        </div>
+    </div>
+    <script type="module" src="script.js"></script>
+</body>
+</html>

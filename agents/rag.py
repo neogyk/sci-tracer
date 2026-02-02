@@ -3,7 +3,7 @@
 import dspy
 import asyncio
 from httpx_aiohttp import HttpxAiohttpClient
-from scitracer.tools.file_reader import doc_reader
+from tools.file_reader import doc_reader
 import pdb
 # def fetch():
 #       async with HttpxAiohttpClient() as client:
