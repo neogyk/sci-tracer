@@ -129,3 +129,48 @@ button:hover {
 #info-panel::-webkit-scrollbar-thumb:hover {
     background: #bbb;
 }
+
+/* Metadata Panel Styles */
+#metadata-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 280px;
+    max-height: 60vh;
+    overflow-y: auto;
+    z-index: 20;
+}
+
+#metadata-panel.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.metadata-content {
+    margin-top: 10px;
+}
+
+.metadata-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-size: 0.9em;
+}
+
+.metadata-item:last-child {
+    border-bottom: none;
+}
+
+.metadata-label {
+    font-weight: 600;
+    color: #666;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.metadata-item span:last-child {
+    color: #333;
+    text-align: right;
+    word-break: break-word;
+}

@@ -1,93 +1,159 @@
-### Run and evaluate the performance of the AI-Scientist using different problems:
-### 1. SokanaAI Scientist: https://sakana.ai/ai-scientist/
+import dspy
 import sys
 
-import dspy
-import asyncio
-from httpx_aiohttp import HttpxAiohttpClient
-import pdb
+sys.path.append("/Users/leonid/Desktop/FusionAI/SciTracer/tools")
+from pub_search import arxiv_search, scolars_search, file_reader
 import tqdm
-from docling.document_converter import DocumentConverter
+import chromadb
 
-def doc_reader(source:str):
-      converter = DocumentConverter()
-      result = converter.convert(source)
-      return result.document.export_to_markdown()
+# 1. Using the question find the papers
+# 2. Parse the papers and decompose it into the sequence of the problem -> solution -> results/conclustion
+# 3. Having the list of the trajectories. Create own instructions
+# 4. Follow the instructions to perform the task.
 
-
-# def fetch():
-#       async with HttpxAiohttpClient() as client:
-#             response = await client.get("https://encode.io")
-#             print(response)
-
-#       asyncio.run(main())
 
 class Trajectory(dspy.Signature):
-      paragraph = dspy.InputField(desc="Part of the reseach article")
-      problem:str = dspy.OutputField(desc='the formulation of problem that is being solve in the paragraph or article. One sentence. ')
-      method:str = dspy.OutputField(desc="short list of the insturction that necessary to proceed to get the result. Several Sentences")
-      result:str = dspy.OutputField(desc="The result or conclusion of the paragraph. Provide one sentence")
+    question = dspy.InputField(
+        desc="The problem or question that is necessary to solve"
+    )
+    paragraph = dspy.InputField(desc="Part of the reseach article")
+    problem: str = dspy.OutputField(
+        desc="the formulation of problem that is being solve in the paragraph or article"
+    )
+    method: str = dspy.OutputField(
+        desc="The instuction that author or other scientist or people proceeded in order to solve this problem. In could be the methodology or algorithm of list of instruction"
+    )
+    result: str = dspy.OutputField(desc="The result obtained by solving this problems")
 
-class SearchAgent(dspy.Module):
-      """
-      The search agent uses the available tools for the searching for the information 
-      by given prompt
-      """
-      def __init__(self):
-            self.search = dspy.Predict()
-            self.search_tools = []
-            self.fetch_tools = []
-            return
-      
-      def fetch(self):
-            return
 
-      def forward(self, prompt:str):
-            for tool in self.tools:
-                  prediction = self.search(prompt)
-                  result = self.fetch(prediction)
-            return result
-      
+class ResearchPlan(dspy.Signature):
+    question = dspy.InputField(
+        desc="The problem or question that is necessary to solve"
+    )
+    previous_research_plan = dspy.InputField(desc="Previouse Version of research plan")
+    paragraph = dspy.InputField(desc="Part of the reseach article")
+    research_plan = dspy.OutputField(
+        desc="Research plan that is necessary to proceed inorder to resolve the problem"
+    )
+
+
+class Executor(dspy.Signature):
+    task = dspy.InputField(desc="The task that is necessary to resolve")
+    plan = dspy.InputField(
+        desc="Research plan that is necessary to proceed inorder to resolve the problem"
+    )
+    answer = dspy.OutputField(desc="Final answer")
+
+
+class Researcher(dspy.Module):
+    """
+    Generate the reaserch plan based on the
+
+    :param dspy: _description_
+    :type dspy: _type_
+    """
+
+    def __init__(self):
+        self.researcher = dspy.ChainOfThought(ResearchPlan)
+        return
+
+    def forward(self, prompt, trajectory):
+        previous_research_plan = ""
+        for paragraph in trajectory:
+            res = self.researcher(
+                question=prompt,
+                paragraph=paragraph,
+                previous_research_plan=previous_research_plan,
+            )
+            previous_research_plan = res.research_plan
+            print(previous_research_plan)
+        return previous_research_plan
+
+
 class RAG(dspy.Module):
-      """
-      The RAG Module provides the discovery trajectories for given idea, question or hypothesis.
-      Please chunk the text of the document and decompose it into the sequence of the
-      problem - method of the problem - solution and cosequences. This discovery trajectory for each of the paper
-      will be used for the research planning.
-      """
-      def __init__(self):
-            self.trajectories = dspy.Predict(Trajectory)
-            self.tool = doc_reader
-            return
-      
-      def build_rag(self, query:str):
-            url = "https://arxiv.org/pdf/2412.09871"
-            doc = self.tool(url)
-            return doc
-      
-      def forward(self, prompt:str):
-            tr_list = []
-            paper = self.build_rag(query=prompt)
-            for section in tqdm.tqdm(paper.split("##")):
-                  if len(section)==0:
-                        continue
-                  try:
-                        tr_list.append(self.trajectories(paragraph=section))
-                  except Exception:
-                        pass
-            return tr_list
-      
-if __name__ == "__main__":
+    """
+    The RAG Module provides the discovery trajectories for given idea, question or hypothesis.
+    Please chunk the text of the document and decompose it into the sequence of the
+    problem - method of the problem - solution and cosequences. This discovery trajectory for each of the paper
+    will be used for the research planning.
+    """
 
-      import os
-      os.environ["MISTRAL_API_KEY"] = "sBEjabQFOosPqTWOrBkJKKXFQK9RHCha"
-      lm = dspy.LM("mistral/ministral-8b-2512")
-      dspy.configure(lm=lm)
-      idea = "How to create the byte free input layer for neural network "
-      rag_agent = RAG()
-      #Search agent:
-      traj = rag_agent.forward(idea)
-      dict_ = [{'p':t.problem, 's': t.method, 'c':t.result} for t in traj]
-      with open("traj.json", "w") as f: json.dump(dict_, f)
-      
-      print(traj)
+    def __init__(self, collection=None):
+        self.trajectories = dspy.Predict(Trajectory)
+        self.search_tools = [arxiv_search, scolars_search]
+        self.researcher = dspy.ChainOfThought("Trajectory->Plan")
+        self.collection = collection
+        return
+
+    def build_rag(self, prompt):
+        papers_url = []
+        for i in range(len(self.search_tools)):
+            results = self.search_tools[i](prompt=prompt, n=2)
+            for r in results:
+                papers_url.append(r[0])
+        return papers_url
+
+    def sample_trajectory_points(self, starting_point, n_results=5):
+        """Sample trajectory points (research plan) from embedding vectors.
+
+        Retrieves similar trajectory points from the collection using the
+        starting point text as a query. Returns the problem and method
+        for each matched trajectory, excluding the completion (result).
+
+        Args:
+              starting_point: The input text to query similar trajectories.
+              n_results: Number of similar results to retrieve.
+
+        Returns:
+              List of dicts with 'problem', 'method', and 'next_id' keys,
+              representing the research plan steps without final answers.
+        """
+        results = self.collection.query(
+            query_texts=[starting_point], n_results=n_results
+        )
+
+        # Extract base trajectory IDs (strip the a/b/c suffix)
+        trajectory_ids = []
+        seen = set()
+        for doc_id in results["ids"][0]:
+            base_id = doc_id[:-1]
+            if base_id not in seen:
+                seen.add(base_id)
+                trajectory_ids.append(base_id)
+
+        # For each trajectory, retrieve problem and method but NOT result
+        plan_points = []
+        for base_id in trajectory_ids:
+            problem_id = base_id + "a"
+            method_id = base_id + "b"
+
+            trajectory_data = self.collection.get(ids=[problem_id, method_id])
+
+            if trajectory_data and len(trajectory_data["documents"]) == 2:
+                point = {
+                    "problem": trajectory_data["documents"][0],
+                    "method": trajectory_data["documents"][1],
+                    "next_id": trajectory_data["metadatas"][0].get("next_id"),
+                }
+                plan_points.append(point)
+
+        return plan_points
+
+    def forward(self, prompt: str):
+        tr_list = []
+        papers_url = self.build_rag(prompt=prompt)
+        # Form the trajectory
+        for url in tqdm.tqdm(papers_url):
+            if url is not None:
+                try:
+                    paper = file_reader(url)
+                except Exception as e:
+                    print(f"E: {e} | {url}")
+                else:
+                    for section in tqdm.tqdm(paper.split("##")):
+                        if len(section) == 0:
+                            continue
+                        tr_list.append(
+                            self.trajectories(paragraph=section, question=prompt)
+                        )
+        return tr_list
