@@ -1,0 +1,6 @@
+E_T^miss:
+  bin_edges: [0, 50, 100]
+
+yields:
+  - 1.5
+  - 4.5

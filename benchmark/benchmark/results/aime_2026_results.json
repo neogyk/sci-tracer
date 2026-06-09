@@ -1,0 +1,291 @@
+{
+  "dataset": "MathArena/aime_2026",
+  "split": "train",
+  "n_total": 30,
+  "n_correct": 0,
+  "accuracy": 0.0,
+  "run_executor": true,
+  "mistake_counts": {
+    "Reasoning Error": 30,
+    "Conceptual Misunderstanding": 0,
+    "Missed Insight": 0,
+    "Incomplete or Unclear Answer": 0,
+    "Calculation Error": 0,
+    "Invalid Approach": 0,
+    "Question Misunderstanding": 0,
+    "Notation Error": 0,
+    "Hallucination": 0
+  },
+  "per_example": [
+    {
+      "index": 0,
+      "question": "Patrick started walking at a constant rate along a straight road from school to the park. One hour after Patrick left, T",
+      "expected": "277",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.76,
+      "run_id": "aime2026-0000-1780569414"
+    },
+    {
+      "index": 1,
+      "question": "Find the number of positive integer palindromes written in base $10$ with no zero digits, and whose digits add up to $13",
+      "expected": "62",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.72,
+      "run_id": "aime2026-0001-1780569449"
+    },
+    {
+      "index": 2,
+      "question": "A hemisphere with radius $200$ sits on top of a horizontal circular disk with radius $200,$ and the hemisphere and disk ",
+      "expected": "79",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.62,
+      "run_id": "aime2026-0002-1780569484"
+    },
+    {
+      "index": 3,
+      "question": "Find the number of integers less than or equal to 100 that are equal to $a+b+ab$ for some choice of distinct positive in",
+      "expected": "70",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.92,
+      "run_id": "aime2026-0003-1780569519"
+    },
+    {
+      "index": 4,
+      "question": "A plane contains points $A$ and $B$ with $AB = 1$. Point $A$ is rotated in the plane counterclockwise through an acute a",
+      "expected": "65",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.41,
+      "run_id": "aime2026-0004-1780569555"
+    },
+    {
+      "index": 5,
+      "question": "A real number $x$ satisfies $\\sqrt[20]{x^{\\log_{2026}x}}=26x$. What is the number of positive divisors of the product of",
+      "expected": "441",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 18.43,
+      "run_id": "aime2026-0005-1780569589"
+    },
+    {
+      "index": 6,
+      "question": "\nFind the number of functions $\\pi$ mapping the set $A =\\{1,2,3,4,5,6\\}$ onto $A$ such that for every $a \\in A,$\n\\[\n\\pi(",
+      "expected": "396",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.61,
+      "run_id": "aime2026-0006-1780569625"
+    },
+    {
+      "index": 7,
+      "question": "Let $N$ be the number of positive integer divisors of $17017^{17}$ that leave a remainder of $5$ when divided by $12$. F",
+      "expected": "244",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.92,
+      "run_id": "aime2026-0007-1780569661"
+    },
+    {
+      "index": 8,
+      "question": "Joanne has a blank fair six-sided die and six stickers each displaying a different integer from 1 to 6. Joanne rolls the",
+      "expected": "29",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 18.33,
+      "run_id": "aime2026-0008-1780569696"
+    },
+    {
+      "index": 9,
+      "question": "Let $\\triangle ABC$ have side lengths $AB = 13, BC = 14,$ and $CA = 15.$ Triangle $\\triangle A'B'C'$ is obtained by rota",
+      "expected": "156",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 18.02,
+      "run_id": "aime2026-0009-1780569733"
+    },
+    {
+      "index": 10,
+      "question": "The integers from $1$ to $64$ are placed in some order into an $8 \\times 8$ grid of cells with one number in each cell. ",
+      "expected": "896",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.82,
+      "run_id": "aime2026-0010-1780569768"
+    },
+    {
+      "index": 11,
+      "question": "Triangle $\\triangle ABC$ lies in plane $\\mathcal P$ with $AB = 6, AC = 4,$ and $\\angle BAC = 90^\\circ.$ Let $D$ be the r",
+      "expected": "161",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 18.11,
+      "run_id": "aime2026-0011-1780569804"
+    },
+    {
+      "index": 12,
+      "question": "For each positive integer $r$ less than $502,$ define\n\\[\nS_r=\\sum_{m\\ge 0}\\dbinom{10000}{502n+r},\n\\]\nwhere $\\binom{10000",
+      "expected": "39",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.71,
+      "run_id": "aime2026-0012-1780569839"
+    },
+    {
+      "index": 13,
+      "question": "In an equiangular pentagon, the sum of the squares of the side lengths equals $308,$ and the sum of the squares of the d",
+      "expected": "681",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 18.12,
+      "run_id": "aime2026-0013-1780569874"
+    },
+    {
+      "index": 14,
+      "question": "Let $a, b,$ and $n$ be positive integers with both $a$ and $b$ greater than or equal to $2$ and less than or equal to $2",
+      "expected": "83",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.68,
+      "run_id": "aime2026-0014-1780569910"
+    },
+    {
+      "index": 15,
+      "question": "Find the sum of the $10$th terms of all arithmetic sequences of integers that have first term equal to $4$ and include b",
+      "expected": "178",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.31,
+      "run_id": "aime2026-0015-1780569945"
+    },
+    {
+      "index": 16,
+      "question": "The figure below shows a grid of $10$ squares in a row. Each square has a diagonal connecting its lower left vertex to i",
+      "expected": "243",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.72,
+      "run_id": "aime2026-0016-1780569980"
+    },
+    {
+      "index": 17,
+      "question": "Let $ABCDE$ be a nonconvex pentagon with internal angles $\\angle A = \\angle E = 90^\\circ$ and $\\angle B = \\angle D = 45^",
+      "expected": "503",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.71,
+      "run_id": "aime2026-0017-1780570015"
+    },
+    {
+      "index": 18,
+      "question": "For each positive integer $n$ let $f(n)$ be the value of the base-ten numeral $n$ viewed in base $b$, where $b$ is the l",
+      "expected": "279",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.81,
+      "run_id": "aime2026-0018-1780570050"
+    },
+    {
+      "index": 19,
+      "question": "An urn contains $n$ marbles. Each marble is either red or blue, and there are at least $7$ marbles of each color. When $",
+      "expected": "190",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.81,
+      "run_id": "aime2026-0019-1780570086"
+    },
+    {
+      "index": 20,
+      "question": "Find the sum of all real numbers $r$ such that there is at least one point where the circle with radius $r$ centered at ",
+      "expected": "50",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.92,
+      "run_id": "aime2026-0020-1780570121"
+    },
+    {
+      "index": 21,
+      "question": "A standard fair six-sided die is rolled repeatedly. Each time the die reads 1 or 2, Alice gets a coin; each time it read",
+      "expected": "754",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.41,
+      "run_id": "aime2026-0021-1780570156"
+    },
+    {
+      "index": 22,
+      "question": "Isosceles triangle $\\triangle ABC$ has $AB = BC.$ Let $I$ be the incenter of $\\triangle ABC.$ The perimeters of $\\triang",
+      "expected": "245",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.81,
+      "run_id": "aime2026-0022-1780570191"
+    },
+    {
+      "index": 23,
+      "question": "Let $S$ denote the value of the infinite sum\n\\[\n\\frac{1}{9} + \\frac{1}{99} + \\frac{1}{999} + \\frac{1}{9999}  + \\cdots\n\\]",
+      "expected": "669",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.51,
+      "run_id": "aime2026-0023-1780570226"
+    },
+    {
+      "index": 24,
+      "question": "Let $\\triangle ABC$ be a triangle with $D$ on $\\overline{BC}$ such that $\\overline{AD}$ bisects $\\angle BAC.$ Let $\\omeg",
+      "expected": "850",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.82,
+      "run_id": "aime2026-0024-1780570261"
+    },
+    {
+      "index": 25,
+      "question": "Find the greatest integer $n$ such that the cubic polynomial\n\\[\nx^{3} - \\displaystyle\\frac{n}{6}x^{2} + (n - 11)x - 400\n",
+      "expected": "132",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 17.61,
+      "run_id": "aime2026-0025-1780570296"
+    },
+    {
+      "index": 26,
+      "question": "Consider a tetrahedron with two isosceles triangle faces with side lengths $5\\sqrt{10}, 5\\sqrt{10},$ and $10$ and two is",
+      "expected": "223",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 12.56,
+      "run_id": "aime2026-0026-1780570349"
+    },
+    {
+      "index": 27,
+      "question": "Call finite sets of integers $S$ and $T$ cousins if\n- $S$ and $T$ have the same number of elements,\n- $S$ and $T$ are di",
+      "expected": "107",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 9.23,
+      "run_id": "aime2026-0027-1780570371"
+    },
+    {
+      "index": 28,
+      "question": "For integers $a$ and $b,$ let $a \\circ b = a - b$ if $a$ is odd and $b$ is even, and $a+b$ otherwise. Find the number of",
+      "expected": "157",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 9.22,
+      "run_id": "aime2026-0028-1780570390"
+    },
+    {
+      "index": 29,
+      "question": "Find the number of ordered 7-tuples $(a_1, a_2, a_3, \\ldots, a_7)$ having the following properties:\n- $a_k \\in \\{1,2,3\\}",
+      "expected": "393",
+      "predicted": "",
+      "correct": false,
+      "elapsed_s": 9.22,
+      "run_id": "aime2026-0029-1780570408"
+    }
+  ]
+}

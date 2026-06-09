@@ -1,0 +1,168 @@
+{
+  "dataset": "ZhiqiGao/TPBench",
+  "split": "public",
+  "n_total": 10,
+  "n_correct": 0,
+  "accuracy": 0.0,
+  "run_executor": true,
+  "by_domain": {
+    "QM": {
+      "n": 2,
+      "correct": 0,
+      "accuracy": 0.0
+    },
+    "Cosmology": {
+      "n": 4,
+      "correct": 0,
+      "accuracy": 0.0
+    },
+    "Stat Mech": {
+      "n": 1,
+      "correct": 0,
+      "accuracy": 0.0
+    },
+    "Classical Mechanics": {
+      "n": 1,
+      "correct": 0,
+      "accuracy": 0.0
+    },
+    "HET": {
+      "n": 2,
+      "correct": 0,
+      "accuracy": 0.0
+    }
+  },
+  "mistake_counts": {
+    "Incomplete or Unclear Answer": 10,
+    "Reasoning Error": 0,
+    "Conceptual Misunderstanding": 0,
+    "Missed Insight": 0,
+    "Calculation Error": 0,
+    "Invalid Approach": 0,
+    "Question Misunderstanding": 0,
+    "Notation Error": 0,
+    "Hallucination": 0
+  },
+  "per_example": [
+    {
+      "index": 0,
+      "problem_id": "A 3-State QM Problem",
+      "domain": "QM",
+      "difficulty_level": "2",
+      "expected": "\\begin{equation*}\n    \\boxed{\\langle E\\rangle = \\frac{1}{2}(E_a+E_b)}\n\\end{equation*}",
+      "predicted": "UNKNOWN",
+      "correct": false,
+      "justification": "",
+      "elapsed_s": 0.31,
+      "run_id": "tpbench-A 3-State QM Problem-1780855859"
+    },
+    {
+      "index": 1,
+      "problem_id": "Bias of a Sampled Halo Field",
+      "domain": "Cosmology",
+      "difficulty_level": "5",
+      "expected": "The bias of the sampled halo field is given by:\n\\begin{equation}\n\\boxed{\nb^{'} = \\frac{b \\Phi_1\\left(\\frac{1}{|b|\\sigma}\\right)}{\\Phi_1\\left(\\frac{1}{|b|\\sigma}\\right)+|b|\\sigma\\phi_1\\left(\\frac{1}{|b|\\sigma}\\right)}}\n\\end{equation}\nwhere $\\Phi_1$ is the normal cumulative distribution function, $\\phi_1$ is the standard normal probability density function, $b$ is the bare bias, and $\\sigma$ is the pixel variance.",
+      "predicted": "UNKNOWN",
+      "correct": false,
+      "justification": "",
+      "elapsed_s": 0.16,
+      "run_id": "tpbench-Bias of a Sampled Halo Field-1780855860"
+    },
+    {
+      "index": 2,
+      "problem_id": "Blackbody in d Dimensions",
+      "domain": "Stat Mech",
+      "difficulty_level": "1",
+      "expected": "$\\boxed{n=5}.$",
+      "predicted": "UNKNOWN",
+      "correct": false,
+      "justification": "",
+      "elapsed_s": 139.46,
+      "run_id": "tpbench-Blackbody in d Dimensions-1780855860"
+    },
+    {
+      "index": 3,
+      "problem_id": "Boosted Parabolic Trajectory",
+      "domain": "Classical Mechanics",
+      "difficulty_level": "1",
+      "expected": "\\begin{equation*}\n    \\boxed{v_\\infty = \\delta v\\sqrt{1+\\frac{2v_e}{\\delta v}}}\n\\end{equation*}",
+      "predicted": "UNKNOWN",
+      "correct": false,
+      "justification": "",
+      "elapsed_s": 281.0,
+      "run_id": "tpbench-Boosted Parabolic Trajectory-1780855999"
+    },
+    {
+      "index": 4,
+      "problem_id": "Dark Matter Capture as a Function of Time",
+      "domain": "Cosmology",
+      "difficulty_level": "2",
+      "expected": "\\begin{equation}\n\\boxed{N=\\frac{\\sqrt{C}}{\\sqrt{C_{A}}}\\frac{\\left(e^{2\\sqrt{C C_A}t}-1\\right)}{\\left(e^{2\\sqrt{C C_A}t}+1\\right)}}.\n\\end{equation}",
+      "predicted": "UNKNOWN",
+      "correct": false,
+      "justification": "",
+      "elapsed_s": 328.74,
+      "run_id": "tpbench-Dark Matter Capture as a Function of Time-1780856280"
+    },
+    {
+      "index": 5,
+      "problem_id": "One-Pole Problem",
+      "domain": "Cosmology",
+      "difficulty_level": "5",
+      "expected": "\\begin{equation}\n\\boxed{|\\beta|\\approx\\frac{\\pi}{3}\\exp\\left(-\\frac{4}{3}\\sqrt{2\\pi}\\frac{\\Gamma(5/4)}{\\Gamma(3/4)}\\frac{(k/a_{e})^{3/2}}{H_{I}\\sqrt{m}}\\right)}.\\label{eq:exampleresult}\n\\end{equation}",
+      "predicted": "UNKNOWN",
+      "correct": false,
+      "justification": "",
+      "elapsed_s": 448.22,
+      "run_id": "tpbench-One-Pole Problem-1780856609"
+    },
+    {
+      "index": 6,
+      "problem_id": "Scalar Particle Scattering",
+      "domain": "HET",
+      "difficulty_level": "3",
+      "expected": "\\[\n\\left( \\frac{d\\sigma}{d\\Omega} \\right)_{\\text{CM}} = \\frac{\\lambda^2}{64 \\pi^2 s} \\frac{\\sqrt{s - 4 m_2^2}}{\\sqrt{s - 4 m_1^2}}\n\\]",
+      "predicted": "UNKNOWN",
+      "correct": false,
+      "justification": "",
+      "elapsed_s": 748.71,
+      "run_id": "tpbench-Scalar Particle Scattering-1780857057"
+    },
+    {
+      "index": 7,
+      "problem_id": "SHO Vacuum Entanglement",
+      "domain": "QM",
+      "difficulty_level": "4",
+      "expected": "\\begin{equation}\nS = \\boxed{-\\ln\\left(\\frac{4\\sqrt{\\omega_{1}\\omega_{2}}}{\\left(\\sqrt{\\omega_{1}}+\\sqrt{\\omega_{2}}\\right)^{2}}\\right)-\\left(\\frac{(\\omega_{2}-\\omega_{1})^{2}}{4\\sqrt{\\omega_{1}\\omega_{2}}\\left(\\sqrt{\\omega_{1}}+\\sqrt{\\omega_{2}}\\right)^{2}}\\right)\\ln\\left(\\frac{(\\omega_{2}-\\omega_{1})^{2}}{\\left(\\sqrt{\\omega_{1}}+\\sqrt{\\omega_{2}}\\right)^{4}}\\right)}\n\\end{equation}\nwhere\n\\begin{equation}\n\\boxed{\\omega_{1}=\\sqrt{\\frac{k}{m}}\\,\\,\\,\\,\\,\\,\\,\\,\\omega_{2}=\\sqrt{\\frac{k+2g}{m}}}.\n\\end{equation}",
+      "predicted": "UNKNOWN",
+      "correct": false,
+      "justification": "",
+      "elapsed_s": 691.9,
+      "run_id": "tpbench-SHO Vacuum Entanglement-1780857806"
+    },
+    {
+      "index": 8,
+      "problem_id": "Slow-Roll Inflation",
+      "domain": "Cosmology",
+      "difficulty_level": "3",
+      "expected": "\\[\n\\phi = \\sqrt{2q} M_P \\ln \\left\\{ \\exp \\left[ \\sqrt{\\frac{1}{2q}} \\left( \\frac{\\phi_0}{M_P} \\right) \\right] + \\frac{1}{M_P q} \\sqrt{\\frac{V_0}{3}} t \\right\\}.\n\\]",
+      "predicted": "UNKNOWN",
+      "correct": false,
+      "justification": "",
+      "elapsed_s": 528.03,
+      "run_id": "tpbench-Slow-Roll Inflation-1780858498"
+    },
+    {
+      "index": 9,
+      "problem_id": "SUSY-Symmetry",
+      "domain": "HET",
+      "difficulty_level": "4",
+      "expected": "\\begin{equation}\n\\boxed{\\delta_{\\eta}\\phi=-\\sqrt{2}\\eta\\xi,\\quad\\left(\\delta_{\\eta}\\phi\\right)^{\\dagger}=-\\sqrt{2}\\bar{\\xi}\\bar{\\eta}}.\\label{eq:L4-susy}\n\\end{equation}",
+      "predicted": "UNKNOWN",
+      "correct": false,
+      "justification": "",
+      "elapsed_s": 417.62,
+      "run_id": "tpbench-SUSY-Symmetry-1780859026"
+    }
+  ]
+}

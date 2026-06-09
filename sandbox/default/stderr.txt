@@ -1,0 +1,4 @@
+  File "/Users/leonid/Desktop/FusionAI/scitracer/sandbox/default/run.py", line 1
+    u(1) = {ratio}")\n                print(f"    expected        = {expected}")\n                print(f"    relative error  = {rel_err}")\n                print(f"    status          = {status}")\n            except Exception as e:\n                print(f"  Error computing numerical scaling check: {e}")\n        else:\n            print("  No numerical scaling function or results found in the module.")\n\n    return results\n\n\nif __name__ == '__main__':\n    result_map = run_pipeline()\n    print("Final results:")\n    for mod_name, res in result_map.items():\n        print(f"  {mod_name}: {res}")
+              ^
+SyntaxError: unexpected character after line continuation character

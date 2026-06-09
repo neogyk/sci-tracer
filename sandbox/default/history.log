@@ -1,0 +1,17 @@
+[21:03:44.583] run_id=default
+[21:03:44.583] sandbox=/Users/leonid/Desktop/FusionAI/scitracer/sandbox/default
+[21:03:44.600] plan.json saved
+[21:03:44.600] step 00 start: Phase 1: Derive effective bias formula
+[21:05:00.751] step 00 execution OK
+[21:05:00.751] step 00 written: /Users/leonid/Desktop/FusionAI/scitracer/sandbox/default/step_00_phase_1_derive_effective_bias_formula.py
+[21:05:00.751] step 01 start: Implement b_eff function
+[21:09:10.136] step 01 repair 1:   File "/Users/leonid/Desktop/FusionAI/scitracer/sandbox/default/step_01_implement_b_eff_function.py", line 1
+    * f(de
+[21:09:33.413] step 01 repaired OK after 1 attempt(s)
+[21:09:33.413] step 01 written: /Users/leonid/Desktop/FusionAI/scitracer/sandbox/default/step_01_implement_b_eff_function.py
+[21:09:33.413] step 02 start: Validate against deterministic quasi-Monte Carlo
+[21:13:30.713] step 02 repair 1:   File "/Users/leonid/Desktop/FusionAI/scitracer/sandbox/default/step_02_validate_against_deterministic_quasi_mon.py", l
+[21:14:13.825] step 02 repaired OK after 1 attempt(s)
+[21:14:13.863] step 02 written: /Users/leonid/Desktop/FusionAI/scitracer/sandbox/default/step_02_validate_against_deterministic_quasi_mon.py
+[21:14:59.597] orchestrator written: /Users/leonid/Desktop/FusionAI/scitracer/sandbox/default/run.py
+[21:15:03.111] execution OK (repairs=0)

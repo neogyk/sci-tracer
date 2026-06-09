@@ -1,73 +1,227 @@
+import itertools
+import json
+import math
+import random
+import uuid
 import dspy
-import sys
-
-sys.path.append("/Users/leonid/Desktop/FusionAI/SciTracer/tools")
-from pub_search import arxiv_search, scolars_search, file_reader
+import threading
 import tqdm
-import chromadb
+import numpy as np
+from dataclasses import dataclass, field
+from typing import Any, Callable, List, Optional
+from pydantic import BaseModel, Field
 
-# 1. Using the question find the papers
-# 2. Parse the papers and decompose it into the sequence of the problem -> solution -> results/conclustion
-# 3. Having the list of the trajectories. Create own instructions
-# 4. Follow the instructions to perform the task.
+from neo4j import GraphDatabase
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams, PointStruct, NamedVector
+from tools.pub_search import arxiv_search, scolars_search, file_reader
+from tools.pub_search import duckduckgo_pdf_search_tool
+from storage.vector_db import VectorStore, TrajectoryStore
+from storage.knowledge_graph import GraphStore
 
+# ── Shared embedding model (singleton) ────────────────────────────────────────
+# One model for the entire process — avoids loading bge-small + bge-large in parallel.
+# bge-small-en-v1.5 is fast and good enough for retrieval; upgrade here if needed.
+
+_EMBED_MODEL = "BAAI/bge-small-en-v1.5"
+_EMBED_DIM   = 384
+
+_embed_lock:  Optional[threading.Lock] = None
+_embed_model: Optional[Any] = None
+
+
+def _get_embed_model() -> Any:
+    """Lazy-load the shared FastEmbed model (thread-safe singleton)."""
+    global _embed_model, _embed_lock
+    if _embed_lock is None:
+        _embed_lock = threading.Lock()
+    with _embed_lock:
+        if _embed_model is None:
+            from fastembed import TextEmbedding
+            _embed_model = TextEmbedding(model_name=_EMBED_MODEL)
+    return _embed_model
+
+
+def shared_embed(text: str) -> list[float]:
+    """Embed a single string using the shared model. Returns a plain Python list."""
+    model = _get_embed_model()
+    return list(model.embed([text]))[0].tolist()
 
 class Trajectory(dspy.Signature):
-    question = dspy.InputField(
+    question:str = dspy.InputField(
         desc="The problem or question that is necessary to solve"
     )
-    paragraph = dspy.InputField(desc="Part of the reseach article")
+    paragraph = dspy.InputField(desc="Part of the research article")
     problem: str = dspy.OutputField(
-        desc="the formulation of problem that is being solve in the paragraph or article"
+        desc="The formulation of the problem being solved in the paragraph or article"
     )
     method: str = dspy.OutputField(
-        desc="The instuction that author or other scientist or people proceeded in order to solve this problem. In could be the methodology or algorithm of list of instruction"
+        desc="The methodology, algorithm, or list of instructions the author used to solve the problem"
     )
-    result: str = dspy.OutputField(desc="The result obtained by solving this problems")
+    result: str = dspy.OutputField(desc="The result obtained by solving the problem")
 
 
-class ResearchPlan(dspy.Signature):
-    question = dspy.InputField(
-        desc="The problem or question that is necessary to solve"
-    )
-    previous_research_plan = dspy.InputField(desc="Previouse Version of research plan")
-    paragraph = dspy.InputField(desc="Part of the reseach article")
-    research_plan = dspy.OutputField(
-        desc="Research plan that is necessary to proceed inorder to resolve the problem"
-    )
+# ── Hybrid retriever ───────────────────────────────────────────────────────────
 
+@dataclass
+class RetrievedContext:
+    """Fused retrieval result from VectorStore and GraphStore.
 
-class Executor(dspy.Signature):
-    task = dspy.InputField(desc="The task that is necessary to resolve")
-    plan = dspy.InputField(
-        desc="Research plan that is necessary to proceed inorder to resolve the problem"
-    )
-    answer = dspy.OutputField(desc="Final answer")
-
-
-class Researcher(dspy.Module):
+    Fields
+    ------
+    vector_hits   — ordered list of Hoare-step payloads from Qdrant (highest score first).
+    graph_triples — deduplicated ontology edges from the Neo4j concept neighbourhood.
+    graph_prr     — Problem–Recipe–Result clusters from Neo4j matching the query keyword.
     """
-    Generate the reaserch plan based on the
+    vector_hits:   list
+    graph_triples: list
+    graph_prr:     list
 
-    :param dspy: _description_
-    :type dspy: _type_
+    def to_text(self, max_vector: int = 5, max_graph_triples: int = 40) -> str:
+        """Render a single LLM-injectable context block from both retrieval legs."""
+        parts: list[str] = []
+
+        if self.vector_hits:
+            parts.append("── SIMILAR HOARE STEPS (semantic search) ──")
+            for i, hit in enumerate(self.vector_hits[:max_vector]):
+                header = f"[{i + 1}] Step {hit.get('step', '?')}: {hit.get('task', '')}"
+                parts.append(f"{header}\n{hit.get('text', '')}")
+
+        if self.graph_triples:
+            parts.append("── CONCEPT NEIGHBOURHOOD (graph expansion) ──")
+            lines = [
+                f"[{t['subject']}] --{t['predicate']}--> [{t['object']}]"
+                for t in self.graph_triples[:max_graph_triples]
+            ]
+            if len(self.graph_triples) > max_graph_triples:
+                lines.append(f"… ({len(self.graph_triples) - max_graph_triples} more edges not shown)")
+            parts.append("\n".join(lines))
+
+        if self.graph_prr:
+            parts.append("── RELATED PROBLEM–RECIPE–RESULT CLUSTERS ──")
+            for prr in self.graph_prr:
+                parts.append(
+                    f"Problem : {prr['problem']}\n"
+                    f"Recipe  : {prr['recipe']}\n"
+                    f"Result  : {prr['result']}"
+                )
+
+        return "\n\n".join(parts) if parts else ""
+
+
+class HybridRetriever:
+    """Retrieves and fuses context from VectorStore (Qdrant) and GraphStore (Neo4j).
+
+    Retrieval strategy
+    ------------------
+    1. Vector leg          — query VectorStore for the top-k Hoare-step chunks nearest
+                             to the query string using dense embeddings.
+    2. Concept extraction  — collect entity names (subject / object) from the ontology
+                             triples stored in each vector hit's payload.
+    3. Graph leg (MCTS)    — explore the Neo4j concept graph via Monte Carlo Tree Search
+                             seeded by the extracted concepts.  The UCB1 reward signal is
+                             the cosine similarity between each concept's name embedding
+                             and the query embedding, steering search toward query-relevant
+                             sub-graphs rather than expanding uniformly.
+    4. PRR clusters        — fetch Problem–Recipe–Result clusters from Neo4j that contain
+                             the query keyword.
+    5. Fusion              — deduplicated, visit-ranked graph triples are appended after
+                             the ranked vector hits; serialised via RetrievedContext.to_text().
+
+    Either store may be None; the retriever degrades gracefully to whichever is present.
     """
 
-    def __init__(self):
-        self.researcher = dspy.ChainOfThought(ResearchPlan)
-        return
+    def __init__(
+        self,
+        vector_store:     Optional[VectorStore] = None,
+        graph_store:      Optional[GraphStore]  = None,
+        k_vector:         int   = 5,
+        mcts_iterations:  int   = 200,
+        mcts_max_depth:   int   = 4,
+        mcts_exploration: float = 1.414,   # √2
+        mcts_sim_depth:   int   = 2,
+    ) -> None:
+        self.vectors          = vector_store
+        self.graph            = graph_store
+        self.k_vector         = k_vector
+        self.mcts_iterations  = mcts_iterations
+        self.mcts_max_depth   = mcts_max_depth
+        self.mcts_exploration = mcts_exploration
+        self.mcts_sim_depth   = mcts_sim_depth
 
-    def forward(self, prompt, trajectory):
-        previous_research_plan = ""
-        for paragraph in trajectory:
-            res = self.researcher(
-                question=prompt,
-                paragraph=paragraph,
-                previous_research_plan=previous_research_plan,
-            )
-            previous_research_plan = res.research_plan
-            print(previous_research_plan)
-        return previous_research_plan
+    def retrieve(self, query: str) -> RetrievedContext:
+        """Run both retrieval legs and return the fused RetrievedContext."""
+        vector_hits   = self._vector_search(query)
+        concepts      = self._extract_concepts(vector_hits)
+        graph_triples = self._graph_neighbors_mcts(concepts, query)
+        graph_prr     = self._graph_prr(query)
+        return RetrievedContext(
+            vector_hits=vector_hits,
+            graph_triples=graph_triples,
+            graph_prr=graph_prr,
+        )
+
+    # ── private helpers ────────────────────────────────────────────────────────
+
+    def _vector_search(self, query: str) -> list:
+        if self.vectors is None:
+            return []
+        results = self.vectors.search(query, k=self.k_vector)
+        return [r.payload for r in results]
+
+    def _extract_concepts(self, hits: list) -> list[str]:
+        """Collect unique concept names from the triples embedded in vector-hit payloads."""
+        seen:     set[str]  = set()
+        concepts: list[str] = []
+        for hit in hits:
+            for triple in hit.get("triples", []):
+                for key in ("subject", "object"):
+                    name = triple.get(key, "").strip()
+                    if name and name not in seen:
+                        seen.add(name)
+                        concepts.append(name)
+        return concepts
+
+    def _graph_neighbors_mcts(self, concepts: list[str], query: str = "") -> list:
+        """Run MCTS on the ontology graph and return visit-ranked triples."""
+        if self.graph is None or not concepts:
+            return []
+        score_fn = self._make_score_fn(query) if query else None
+        return self.graph.find_neighbors_mcts(
+            concepts,
+            n_iterations  = self.mcts_iterations,
+            max_depth     = self.mcts_max_depth,
+            exploration_c = self.mcts_exploration,
+            sim_depth     = self.mcts_sim_depth,
+            score_fn      = score_fn,
+        )
+
+    def _make_score_fn(self, query: str) -> Callable[[str], float]:
+        """Return a memoized cosine-similarity scorer for MCTS rollouts.
+
+        Uses shared_embed so no separate model is loaded.
+        Results are cached so each concept name is encoded at most once per
+        retrieve() call, keeping repeated MCTS visits cheap.
+        """
+        cache: dict[str, float] = {}
+        q_vec  = np.array(shared_embed(query), dtype=np.float32)
+        q_norm = float(np.linalg.norm(q_vec)) + 1e-8
+
+        def dense_scorer(concept: str) -> float:
+            if concept in cache:
+                return cache[concept]
+            c_vec  = np.array(shared_embed(concept), dtype=np.float32)
+            c_norm = float(np.linalg.norm(c_vec)) + 1e-8
+            score  = max(0.0, float(np.dot(q_vec, c_vec)) / (q_norm * c_norm))
+            cache[concept] = score
+            return score
+
+        return dense_scorer
+
+    def _graph_prr(self, keyword: str) -> list:
+        if self.graph is None:
+            return []
+        return self.graph.find_prr(keyword)
 
 
 class RAG(dspy.Module):
@@ -78,82 +232,63 @@ class RAG(dspy.Module):
     will be used for the research planning.
     """
 
-    def __init__(self, collection=None):
-        self.trajectories = dspy.Predict(Trajectory)
-        self.search_tools = [arxiv_search, scolars_search]
-        self.researcher = dspy.ChainOfThought("Trajectory->Plan")
-        self.collection = collection
-        return
+    def __init__(self, vector_db, store: Optional[TrajectoryStore] = None):
+        #self.trajectories = dspy.Predict(Trajectory)
+        #self.researcher = dspy.ChainOfThought("Trajectory->Plan")
+        self.vector_db = vector_db
+        self.store = store
 
-    def build_rag(self, prompt):
-        papers_url = []
-        for i in range(len(self.search_tools)):
-            results = self.search_tools[i](prompt=prompt, n=2)
-            for r in results:
-                papers_url.append(r[0])
-        return papers_url
+    def make_trajectory(self, paper):
+        trajectory = self.trajectory.forward(section)
+        return trajectory
 
-    def sample_trajectory_points(self, starting_point, n_results=5):
-        """Sample trajectory points (research plan) from embedding vectors.
-
-        Retrieves similar trajectory points from the collection using the
-        starting point text as a query. Returns the problem and method
-        for each matched trajectory, excluding the completion (result).
-
-        Args:
-              starting_point: The input text to query similar trajectories.
-              n_results: Number of similar results to retrieve.
-
-        Returns:
-              List of dicts with 'problem', 'method', and 'next_id' keys,
-              representing the research plan steps without final answers.
-        """
-        results = self.collection.query(
-            query_texts=[starting_point], n_results=n_results
-        )
-
-        # Extract base trajectory IDs (strip the a/b/c suffix)
-        trajectory_ids = []
-        seen = set()
-        for doc_id in results["ids"][0]:
-            base_id = doc_id[:-1]
-            if base_id not in seen:
-                seen.add(base_id)
-                trajectory_ids.append(base_id)
-
-        # For each trajectory, retrieve problem and method but NOT result
-        plan_points = []
-        for base_id in trajectory_ids:
-            problem_id = base_id + "a"
-            method_id = base_id + "b"
-
-            trajectory_data = self.collection.get(ids=[problem_id, method_id])
-
-            if trajectory_data and len(trajectory_data["documents"]) == 2:
-                point = {
-                    "problem": trajectory_data["documents"][0],
-                    "method": trajectory_data["documents"][1],
-                    "next_id": trajectory_data["metadatas"][0].get("next_id"),
-                }
-                plan_points.append(point)
-
-        return plan_points
-
-    def forward(self, prompt: str):
-        tr_list = []
-        papers_url = self.build_rag(prompt=prompt)
-        # Form the trajectory
-        for url in tqdm.tqdm(papers_url):
-            if url is not None:
+    def build_rag(self, prompt) -> list[tuple[str, str, str]]:
+        """Search all configured sources and return (url, title, abstract) tuples."""
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        papers: list[tuple[str, str, str]] = []
+        with ThreadPoolExecutor(max_workers=len(self.search_tools)) as executor:
+            futures = {
+                executor.submit(fn, prompt=prompt, n=2): fn.__name__
+                for fn in self.search_tools
+            }
+            for future in as_completed(futures):
+                source = futures[future]
                 try:
-                    paper = file_reader(url)
-                except Exception as e:
-                    print(f"E: {e} | {url}")
-                else:
-                    for section in tqdm.tqdm(paper.split("##")):
-                        if len(section) == 0:
-                            continue
-                        tr_list.append(
-                            self.trajectories(paragraph=section, question=prompt)
-                        )
-        return tr_list
+                    results = future.result()
+                    for r in results:
+                        url = r[0] if len(r) > 0 else ""
+                        title = r[1] if len(r) > 1 else ""
+                        abstract = r[2] if len(r) > 2 else ""
+                        if url:
+                            papers.append((url, title, abstract))
+                    print(f"  [{source}] {len(results)} results")
+                except Exception as exc:
+                    print(f"  [{source}] search failed: {exc}")
+        return papers
+
+    def sample_trajectory_points(self, starting_point: str, n_results: int = 5) -> list:
+        """Sample trajectory points from Qdrant; returns problem+method only (not result)."""
+        if self.store is None:
+            return []
+        results = self.store.query(starting_point, n_results=n_results, vector_name="problem")
+        return [
+            {"problem": r["problem"], "method": r["method"], "next_id": None}
+            for r in results
+        ]
+
+    def retrieve_meta_point(self, prompt:str):
+        #The meta point is Hoare triplets;
+        #Add the embedding and retrieve it by embedding;
+        self.vector_db.retrieve(prompt)
+        return retrieved_points
+
+    def retrieve_meta_path(self, prompt: str):
+        return
+    
+    def retrive_point(self):
+        points = self.vector_db.retrieve(prompt)
+        return points
+
+    def retrieve_code(self):
+        code = self.vector_db.retrieve(prompt)
+        return code

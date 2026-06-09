@@ -1,0 +1,6 @@
+Model: TChiWZ
+m(chi1+/chi2^0)=550.0 GeV, m(chi1^0)=200.0 GeV
+sigma(pp->chi1+ chi2^0)=0.055 pb (assumed)
+L=35.9 fb^-1
+BR(Z->e/mu)=0.0673, BR(W->e/mu)=0.214, BR(3l)=0.014402199999999999
+Generation: vectorized 2-body decays (on-shell W/Z), isotropic, detector smearing 1.0% leptons, 10.0 GeV MET resolution

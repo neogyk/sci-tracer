@@ -1,0 +1,42 @@
+[path] Sandbox directory added to sys.path: /Users/leonid/Desktop/FusionAI/scitracer/sandbox/default
+[import] Successfully imported step_00_phase_1_derive_effective_bias_formula
+[import] Successfully imported step_01_implement_b_eff_function
+[import] Successfully imported step_02_validate_against_deterministic_quasi_mon
+
+[info] Discovered key functions:
+ - step_00_phase_1_derive_effective_bias_formula.b_eff
+ - step_01_implement_b_eff_function.b_eff
+ - step_02_validate_against_deterministic_quasi_mon.b_eff
+Selecting canonical implementation: step_00_phase_1_derive_effective_bias_formula.b_eff
+
+[demo] Sample b_eff values (from canonical implementation):
+sigma= 0.1 -> b_in= -2.0: -1.999999, b_in= -0.5: -0.500000, b_in=  0.0:  0.000000, b_in=  0.5:  0.500000, b_in=  2.0:  1.999999
+sigma= 0.5 -> b_in= -2.0: -1.553277, b_in= -0.5: -0.499983, b_in=  0.0:  0.000000, b_in=  0.5:  0.499983, b_in=  2.0:  1.553277
+sigma= 1.0 -> b_in= -2.0: -0.990923, b_in= -0.5: -0.486559, b_in=  0.0:  0.000000, b_in=  0.5:  0.486559, b_in=  2.0:  0.990923
+sigma= 3.0 -> b_in= -2.0: -0.386893, b_in= -0.5: -0.304687, b_in=  0.0:  0.000000, b_in=  0.5:  0.304687, b_in=  2.0:  0.386893
+
+[coherence] Comparing implementations and validating against QMC ...
+[coherence] Pairwise maximum relative errors:
+ - m0_vs_m1: 3.57381e-16 at (sigma=5.0, b_in=-0.2), ref=-0.155328, comp=-0.155328
+ - m0_vs_m2: 2.96197e-16 at (sigma=0.1, b_in=-3.0), ref=-2.99861, comp=-2.99861
+ - m1_vs_m2: 3.57381e-16 at (sigma=5.0, b_in=-0.2), ref=-0.155328, comp=-0.155328
+
+[coherence] QMC comparison (canonical vs deterministic quasi-MC):
+ - z-grid size N: 8192
+ - max_rel_err (|b_eff|>1e-3): 0.000160866
+   worst at (sigma=0.01, b_in=0.1): beff=0.1, qmc=0.0999839
+ - max_abs_small (|b_eff|<=1e-3): 5.50233e-16
+   worst at (sigma=0.05, b_in=0.0): beff=0, qmc=-5.50233e-16
+
+[step_02] Import-time validation metrics:
+ - Validation passed inside step_02.
+ - Max relative error (|b_eff|>1e-3): 4.04606e-05
+ - Max absolute error (|b_eff|<=1e-3): 3.56389e-15
+ - N used internally: 32768
+
+[sanity] Large-sigma asymptotic for b_in=+1:
+ - b_eff(100.0, 1.0) = 0.0124762
+ - Reference scale ~ sqrt(pi/2)/sigma = 0.0125331
+
+[summary] All modules imported, coherence verified, and validations passed.
+[done] Orchestrator completed successfully.

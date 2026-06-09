@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/bin/python -c \"import z3; print\\('z3', z3.get_version_string\\(\\)\\)\")",
+      "Bash(pip3 install *)",
+      "Bash(.venv/bin/pip install *)",
+      "Bash(/Users/leonid/Desktop/FusionAI/scitracer/scitracer/bin/python -m pip install qdrant-client)",
+      "Bash(scitracer/bin/uv pip *)",
+      "Bash(scitracer/bin/python -c \"import qdrant_client; print\\('qdrant-client:', qdrant_client.__version__\\)\")",
+      "Bash(scitracer/bin/python -c \"from qdrant_client import QdrantClient; from qdrant_client.models import Distance, VectorParams, PointStruct, NamedVector; print\\('qdrant imports OK'\\)\")",
+      "Bash(scitracer/bin/python -c ' *)"
+    ]
+  }
+}

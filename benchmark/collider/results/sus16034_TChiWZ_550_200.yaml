@@ -1,0 +1,32 @@
+# CMS-SUS-16-034 | TChiWZ_550_200 | electroweak WZ/ZZ signal region
+# Observable: E_T^miss  (GeV)
+# Luminosity: 35.9 fb^-1 at sqrt(s) = 13 TeV
+#
+# Fill the `yield` fields with your predicted signal yields.
+# Do NOT modify the bin_edges.
+
+signal_model: TChiWZ_550_200
+paper: CMS-SUS-16-034
+signal_region: electroweak_WZ_ZZ
+observable: MET
+luminosity_fb: 35.9
+sqrts_TeV: 13
+
+bins:
+  - bin_edges: [100, 150]
+    yield: null
+  - bin_edges: [150, 200]
+    yield: null
+  - bin_edges: [200, 250]
+    yield: null
+  - bin_edges: [250, 300]
+    yield: null
+  - bin_edges: [300, 400]
+    yield: null
+  - bin_edges: [400, 500]
+    yield: null
+  - bin_edges: [500, null]
+    yield: null
+
+yields:
+  - 0.0

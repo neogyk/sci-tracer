@@ -1,0 +1,28 @@
+[05:59:26.102] run_id=chqecbtfta
+[05:59:26.103] sandbox=sandbox/chqecbtfta
+[05:59:26.103] plan.json saved
+[05:59:26.103] step 00 start: Phase 1: Literature Review
+[05:59:32.791] step 00 execution OK
+[05:59:32.792] step 00 written: sandbox/chqecbtfta/step_00_phase_1_literature_review.py
+[05:59:32.792] step 01 start: Review advanced quantum error-correction techniques
+[05:59:42.134] step 01 repair 1:   File "/Users/leonid/Desktop/FusionAI/scitracer/sandbox/chqecbtfta/step_01_review_advanced_quantum_error_correction.py"
+[05:59:47.274] step 01 repaired OK after 1 attempt(s)
+[05:59:47.274] step 01 written: sandbox/chqecbtfta/step_01_review_advanced_quantum_error_correction.py
+[05:59:47.274] step 02 start: Analyze fault-tolerant threshold advancement literature
+[05:59:54.420] step 02 repair 1:   File "/Users/leonid/Desktop/FusionAI/scitracer/sandbox/chqecbtfta/step_02_analyze_fault_tolerant_threshold_advance.py"
+[06:00:00.505] step 02 repaired OK after 1 attempt(s)
+[06:00:00.505] step 02 written: sandbox/chqecbtfta/step_02_analyze_fault_tolerant_threshold_advance.py
+[06:00:00.505] step 03 start: Phase 2: Code Development and Simulation
+[06:00:23.504] step 03 execution OK
+[06:00:23.504] step 03 written: sandbox/chqecbtfta/step_03_phase_2_code_development_and_simulation.py
+[06:00:23.504] step 04 start: Implant tailored quantum error corrections
+[06:00:23.634] step 04 execution OK
+[06:00:23.634] step 04 written: sandbox/chqecbtfta/step_04_implant_tailored_quantum_error_correctio.py
+[06:00:23.634] step 05 start: Benchmark against noise models
+[06:00:23.766] step 05 execution OK
+[06:00:23.766] step 05 written: sandbox/chqecbtfta/step_05_benchmark_against_noise_models.py
+[06:00:23.766] step 06 start: Phase 3: Verification and Analysis
+[06:00:25.660] step 06 execution OK
+[06:00:25.660] step 06 written: sandbox/chqecbtfta/step_06_phase_3_verification_and_analysis.py
+[06:00:39.902] orchestrator written: sandbox/chqecbtfta/run.py
+[06:01:02.831] execution FAILED (repairs=3)

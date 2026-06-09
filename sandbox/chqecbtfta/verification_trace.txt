@@ -1,0 +1,9 @@
+Satisfiable: The plan can reach the goal state.
+Model:
+literature_found: False
+papers_on_qecc: False
+papers_on_fault_tolerance: False
+simulations_prepared: False
+qecc_developed: False
+benchmark_data: False
+hypothesis_validated: False

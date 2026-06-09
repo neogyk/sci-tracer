@@ -1,0 +1,1 @@
+Construct hardware-aware quantum error-correcting codes, benchmark their fault-tolerant thresholds against realistic noise models, and map out the exact multi-qubit lattice surgery operations needed for logical computation.

@@ -1,0 +1,13 @@
+2026-06-08 21:30:31  INFO      scitracer  Log file: logs/scitracer_20260608_213031.log
+2026-06-08 21:30:31  INFO      scitracer  SciTracer started  question='Construct hardware-aware quantum error-correcting codes, benchmark their fault-tolerant thresholds against realistic noise models, and map out the exact multi-qubit lattice surgery operations needed for logical computation.'
+2026-06-08 21:30:31  INFO      scitracer  LM configured: openai/gpt-4o
+2026-06-08 21:30:31  INFO      scitracer  Run dir: sandbox/chqecbtfta
+2026-06-08 21:30:31  INFO      scitracer  [0/4] Knowledge construction
+2026-06-08 21:30:31  INFO      scitracer  [0/4] Knowledge construction done  chunks=0
+2026-06-08 21:30:31  INFO      scitracer  [1/4] Research plan synthesis
+2026-06-08 21:31:27  INFO      scitracer  [1/4] Plan synthesised  steps=7
+2026-06-08 21:31:27  INFO      scitracer  [2/4] Formalization
+2026-06-08 21:31:27  INFO      scitracer  [2/4] Formalization done  z3_path=sandbox/chqecbtfta/z3_formalization.py
+2026-06-08 21:31:27  INFO      scitracer  [3/4] Verification  max_retries=3
+2026-06-08 21:31:27  INFO      scitracer  [3/4] Verification done  success=True  attempts=1
+2026-06-08 21:31:27  INFO      scitracer  [4/4] Execution  run_id=chqecbtfta  sandbox_root=sandbox

@@ -1,0 +1,25 @@
+============================================================
+  AIME 2026 BENCHMARK RESULTS
+============================================================
+  Dataset  : MathArena/aime_2026  (split=train)
+  Problems : 30
+  Correct  : 1
+  Accuracy : 3.33%
+
+============================================================
+  EXPERIENCE SUMMARY
+============================================================
+  Total entries : 30
+  Correct       : 1
+  Mistakes      : 29
+  Skipped       : 0
+  Uncertain     : 0
+  Accuracy      : 3.33%
+
+  MISTAKE BREAKDOWN
+------------------------------------------------------------
+    Incomplete or Unclear Answer          20  ( 69.0%)
+    Invalid Approach                       5  ( 17.2%)
+    Hallucination                          3  ( 10.3%)
+    Conceptual Misunderstanding            1  (  3.4%)
+============================================================

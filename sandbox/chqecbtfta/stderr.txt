@@ -1,0 +1,4 @@
+  File "/Users/leonid/Desktop/FusionAI/scitracer/sandbox/chqecbtfta/run.py", line 1
+    int(f"Hypothesis Validated: {hypothesis_validated}")\n\nif __name__ == "__main__":\n    main()
+               ^
+SyntaxError: unexpected character after line continuation character
