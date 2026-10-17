@@ -1,7 +1,17 @@
-<img width="400" height="300" alt="SciTracer" src="https://github.com/user-attachments/assets/03fb9c10-70f0-47e8-b122-6100a1390956" />
+<p align="center">
+  <b>Sci Tracer</b>
+</p>
+
+<p align="center">
+  <img width="400" height="300" alt="SciTracer" src="https://github.com/user-attachments/assets/03fb9c10-70f0-47e8-b122-6100a1390956" />
+</p>
+
+<p align="center">
+  <b></b>
+</p>
  
 ### Sci-Tracer provable and verifiable scientific discovery.
-Sci-Tracer is an agentic systems for automatic, efficient scientific discovery that utilize the plan formalization and logic verification.
+Sci-Tracer is an agentic system for automatic, efficient scientific discovery that utilizes plan formalization and logic verification.
 
 
 
