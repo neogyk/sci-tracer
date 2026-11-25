@@ -13,7 +13,8 @@
 ### Sci-Tracer provable and verifiable scientific discovery.
 Sci-Tracer is an agentic system for automatic, efficient scientific discovery that utilizes plan formalization and logic verification.
 
-
+### Publication:
+https://zenodo.org/records/23605222
 
 ### Knowledge Constructor:
 
