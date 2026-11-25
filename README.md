@@ -13,6 +13,12 @@
 ### Sci-Tracer provable and verifiable scientific discovery.
 Sci-Tracer is an agentic system for automatic, efficient scientific discovery that utilizes plan formalization and logic verification.
 
+### Installation:
+Required to have python3.14
+```
+uv pip install -r requirements.txt
+```
+
 ### Publication:
 https://zenodo.org/records/23605222
 
